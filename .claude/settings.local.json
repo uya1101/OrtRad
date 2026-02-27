@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm run build)",
+      "Bash(npm run dev)",
+      "Bash(ls -la /Users/uya/Desktop/OrtRad/.env* 2>&1 | head -20)"
+    ]
+  }
+}

@@ -1,0 +1,123 @@
+{
+  "nav": {
+    "home": "Home",
+    "search": "Search",
+    "about": "About OrtRad",
+    "admin": "Admin"
+  },
+  "dashboard": {
+    "latest": "Latest Articles",
+    "trends": "Trending Keywords",
+    "rt_highlight": "Radiologic Technologist Highlights",
+    "sources": "Sources",
+    "categories": "Categories",
+    "filter_by_source": "FILTER_BY_SOURCE",
+    "filter_by_category": "FILTER_BY_CATEGORY",
+    "load_more": "Load More",
+    "system_online": "SYSTEM ONLINE",
+    "system_version": "ORTHO-RAD KNOWLEDGE SYSTEM v2.1 · PROFESSIONAL USE ONLY"
+  },
+  "hero": {
+    "typing_text": [
+      "Orthopedic Frontline",
+      "Bone Density DXA Analysis",
+      "MRI Metal Artifact Mitigation",
+      "CT Protocol Optimization",
+      "X-ray Positioning"
+    ],
+    "description": "Knowledge platform for radiologic technologists specializing in orthopedics. Real-time access to latest research, imaging protocols, and case analysis."
+  },
+  "article": {
+    "authors": "Authors",
+    "journal": "Journal",
+    "published": "Published",
+    "summary_en": "AI Summary / Summary",
+    "summary_ja": "AI Summary / Summary",
+    "abstract": "Abstract",
+    "original": "View Original",
+    "rt_badge": "RT",
+    "rt_description": "Contains important information for radiologic technologists",
+    "related_articles": "Related Articles",
+    "article_view": "ARTICLE_VIEW",
+    "not_found": "ARTICLE NOT FOUND",
+    "loading_article": "LOADING_ARTICLE...",
+    "return_home": "→ RETURN_HOME",
+    "return_dashboard": "← RETURN_TO_DASHBOARD",
+    "et_al": "et al.",
+    "unknown": "Unknown"
+  },
+  "search": {
+    "placeholder": "Enter keywords to search...",
+    "no_results": "NO_RESULTS",
+    "no_results_message": "No articles found matching \"{query}\".",
+    "searching_for": "SEARCHING_FOR: \"{query}\"",
+    "enter_keyword": "ENTER_KEYWORD_TO_SEARCH",
+    "search": "SEARCH",
+    "search_ready": "SEARCH_READY",
+    "searching": "SEARCHING",
+    "advanced_filters": "Advanced Filters",
+    "clear_filters": "× CLEAR",
+    "apply_filters": "Apply",
+    "active_filters": "Active filters: {count}",
+    "recent_searches": "Recent Searches",
+    "trending_keywords": "Trending Keywords",
+    "suggestions": "Suggestions",
+    "clear": "Clear",
+    "all_sources": "All Sources",
+    "all_categories": "All Categories",
+    "rt_only": "RT Only",
+    "date_range": "Date Range",
+    "date_from": "From",
+    "date_to": "To",
+    "sort_by": "Sort By",
+    "sort_date": "Date",
+    "sort_relevance": "Relevance",
+    "sort_trend": "Trend Score",
+    "reset_filters": "Reset Filters",
+    "no_recent_searches": "No recent searches"
+  },
+  "sources": {
+    "pubmed": "PubMed",
+    "jaaos": "JAAOS",
+    "radiology": "Radiology",
+    "eur_radiology": "European Radiology",
+    "rsna": "RSNA"
+  },
+  "categories": {
+    "all": "All",
+    "general_orthopedics": "General Orthopedics",
+    "imaging_diagnostics": "Imaging Diagnostics",
+    "fracture": "Fracture",
+    "bone_density": "Bone Density",
+    "ai_technology": "AI & Technology",
+    "surgical_technique": "Surgical Technique",
+    "guideline": "Guideline",
+    "rehabilitation": "Rehabilitation"
+  },
+  "common": {
+    "loading": "Loading...",
+    "error": "An error occurred",
+    "retry": "Retry",
+    "lang_ja": "日本語",
+    "lang_en": "English",
+    "online": "ONLINE",
+    "standby": "STANDBY",
+    "active": "ACTIVE",
+    "articles": "articles"
+  },
+  "footer": {
+    "copyright": "© 2026 OrtRad. All rights reserved.",
+    "privacy": "Privacy Policy",
+    "terms": "Terms of Service",
+    "contact": "Contact"
+  },
+  "status": {
+    "view_original": "VIEW_ORIGINAL",
+    "load_more": "LOAD_MORE"
+  },
+  "errors": {
+    "fetch_failed": "Failed to fetch data",
+    "network_error": "Network error occurred",
+    "invalid_params": "Invalid parameters"
+  }
+}

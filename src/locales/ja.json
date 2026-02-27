@@ -1,0 +1,123 @@
+{
+  "nav": {
+    "home": "ホーム",
+    "search": "検索",
+    "about": "OrtRadについて",
+    "admin": "管理"
+  },
+  "dashboard": {
+    "latest": "最新論文",
+    "trends": "トレンドキーワード",
+    "rt_highlight": "放射線技師向けハイライト",
+    "sources": "ソース",
+    "categories": "カテゴリ",
+    "filter_by_source": "FILTER_BY_SOURCE",
+    "filter_by_category": "FILTER_BY_CATEGORY",
+    "load_more": "さらに読み込む",
+    "system_online": "SYSTEM ONLINE",
+    "system_version": "ORTHO-RAD KNOWLEDGE SYSTEM v2.1 · PROFESSIONAL USE ONLY"
+  },
+  "hero": {
+    "typing_text": [
+      "整形外科領域の最前線",
+      "骨密度・DXA解析",
+      "MRI金属アーチファクト対策",
+      "CTプロトコル最適化",
+      "XP撮影ポジショニング"
+    ],
+    "description": "整形外科に特化した放射線技師のための知識武装プラットフォーム。最新研究、撮影プロトコル、症例解析をリアルタイムで提供。"
+  },
+  "article": {
+    "authors": "著者",
+    "journal": "掲載誌",
+    "published": "公開日",
+    "summary_en": "AI要約 / Summary",
+    "summary_ja": "AI要約 / Summary",
+    "abstract": "要約",
+    "original": "原文を見る",
+    "rt_badge": "RT",
+    "rt_description": "放射線技師向けの重要情報が含まれています",
+    "related_articles": "関連記事",
+    "article_view": "ARTICLE_VIEW",
+    "not_found": "ARTICLE NOT FOUND",
+    "loading_article": "LOADING_ARTICLE...",
+    "return_home": "→ RETURN_HOME",
+    "return_dashboard": "← RETURN_TO_DASHBOARD",
+    "et_al": "他",
+    "unknown": "不明"
+  },
+  "search": {
+    "placeholder": "キーワードを入力して検索...",
+    "no_results": "NO_RESULTS",
+    "no_results_message": "\"{query}\" に一致する記事が見つかりませんでした。",
+    "searching_for": "SEARCHING_FOR: \"{query}\"",
+    "enter_keyword": "ENTER_KEYWORD_TO_SEARCH",
+    "search": "SEARCH",
+    "search_ready": "SEARCH_READY",
+    "searching": "SEARCHING",
+    "advanced_filters": "詳細フィルタ",
+    "clear_filters": "× CLEAR",
+    "apply_filters": "適用",
+    "active_filters": "適用中のフィルタ: {count}",
+    "recent_searches": "最近の検索",
+    "trending_keywords": "トレンドキーワード",
+    "suggestions": "候補",
+    "clear": "クリア",
+    "all_sources": "すべてのソース",
+    "all_categories": "すべてのカテゴリ",
+    "rt_only": "RT関連のみ",
+    "date_range": "日付範囲",
+    "date_from": "開始日",
+    "date_to": "終了日",
+    "sort_by": "並び替え",
+    "sort_date": "公開日順",
+    "sort_relevance": "関連度順",
+    "sort_trend": "トレンド順",
+    "reset_filters": "フィルタをリセット",
+    "no_recent_searches": "最近の検索はありません"
+  },
+  "sources": {
+    "pubmed": "PubMed",
+    "jaaos": "JAAOS",
+    "radiology": "Radiology",
+    "eur_radiology": "European Radiology",
+    "rsna": "RSNA"
+  },
+  "categories": {
+    "all": "すべて",
+    "general_orthopedics": "整形外科全般",
+    "imaging_diagnostics": "画像診断",
+    "fracture": "骨折",
+    "bone_density": "骨密度",
+    "ai_technology": "AI・テクノロジー",
+    "surgical_technique": "手術手技",
+    "guideline": "ガイドライン",
+    "rehabilitation": "リハビリテーション"
+  },
+  "common": {
+    "loading": "読み込み中...",
+    "error": "エラーが発生しました",
+    "retry": "再試行",
+    "lang_ja": "日本語",
+    "lang_en": "English",
+    "online": "ONLINE",
+    "standby": "STANDBY",
+    "active": "ACTIVE",
+    "articles": "articles"
+  },
+  "footer": {
+    "copyright": "© 2026 OrtRad. All rights reserved.",
+    "privacy": "プライバシーポリシー",
+    "terms": "利用規約",
+    "contact": "お問い合わせ"
+  },
+  "status": {
+    "view_original": "VIEW_ORIGINAL",
+    "load_more": "LOAD_MORE"
+  },
+  "errors": {
+    "fetch_failed": "データの取得に失敗しました",
+    "network_error": "ネットワークエラーが発生しました",
+    "invalid_params": "無効なパラメータです"
+  }
+}
