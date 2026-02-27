@@ -6,6 +6,7 @@ import { NAV_ITEMS } from '../../constants/navigation';
 import LogoIcon from '../common/LogoIcon';
 import Dot from '../common/Dot';
 import HudBtn from '../common/HudBtn';
+import { useAuth as useClerkAuth } from '@clerk/clerk-react';
 import { useAuth } from '../../contexts/AuthContext';
 
 interface NavItemProps {
@@ -89,8 +90,10 @@ function LanguageToggle() {
   );
 }
 
-export default function Header({ onAdminLogin }: { onAdminLogin?: () => void }) {
-  const { t, isAuthenticated: isAdmin } = useAuth();
+export default function Header() {
+  const { t } = useTranslation();
+  const { isAuthenticated: isAdmin } = useAuth();
+  const { signOut } = useClerkAuth();
   const [scrolled, setScrolled] = useState(false);
   const [time, setTime] = useState("");
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -162,32 +165,75 @@ export default function Header({ onAdminLogin }: { onAdminLogin?: () => void }) 
 
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
           <LanguageToggle />
-          <Link to="/admin" onClick={(e) => {
-            e.preventDefault();
-            if (isAdmin) {
-              window.location.href = '/admin/dashboard';
-            } else {
-              onAdminLogin?.();
-            }
-          }}
-            style={{
-              fontSize: "0.5rem",
-              color: T.textDim,
-              textDecoration: "none",
-              fontFamily: "'Share Tech Mono',monospace",
-              letterSpacing: "0.08em",
-              opacity: isAdmin ? 1 : 0.6,
-              transition: "opacity 0.2s ease, color 0.2s ease",
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.opacity = "1";
-              e.currentTarget.style.color = T.neonBlue;
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.opacity = isAdmin ? 1 : 0.6;
-              e.currentTarget.style.color = T.textDim;
-            }}
-          >{isAdmin ? 'ADMIN' : 'ADMIN_LOGIN'}</Link>
+          {isAdmin && (
+            <>
+              <Link
+                to="/admin"
+                onClick={(e) => {
+                  e.preventDefault();
+                  window.location.href = '/admin/dashboard';
+                }}
+                style={{
+                  fontSize: "0.5rem",
+                  color: T.textDim,
+                  textDecoration: "none",
+                  fontFamily: "'Share Tech Mono',monospace",
+                  letterSpacing: "0.08em",
+                  transition: "opacity 0.2s ease, color 0.2s ease",
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.color = T.neonBlue;
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.color = T.textDim;
+                }}
+              >
+                ADMIN
+              </Link>
+              <button
+                onClick={() => signOut()}
+                style={{
+                  fontSize: "0.5rem",
+                  color: T.textDim,
+                  background: "transparent",
+                  border: "none",
+                  cursor: "pointer",
+                  fontFamily: "'Share Tech Mono',monospace",
+                  letterSpacing: "0.08em",
+                  transition: "opacity 0.2s ease, color 0.2s ease",
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.color = T.neonCoral;
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.color = T.textDim;
+                }}
+              >
+                SIGN_OUT
+              </button>
+            </>
+          )}
+          {!isAdmin && (
+            <Link
+              to="/sign-in"
+              style={{
+                fontSize: "0.5rem",
+                color: T.textDim,
+                textDecoration: "none",
+                fontFamily: "'Share Tech Mono',monospace",
+                letterSpacing: "0.08em",
+                transition: "opacity 0.2s ease, color 0.2s ease",
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.color = T.neonBlue;
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.color = T.textDim;
+              }}
+            >
+              SIGN_IN
+            </Link>
+          )}
           <HudBtn label="SEARCH" small icon={
             <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
               <circle cx="11" cy="11" r="8" /><path d="m21 21-4.35-4.35" />

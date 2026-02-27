@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+        xmlns:xhtml="http://www.w3.org/1999/xhtml">
+  <!-- Homepage -->
+  <url>
+    <loc>https://ortrad.com/</loc>
+    <lastmod>2025-02-27</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>1.0</priority>
+    <xhtml:link rel="alternate" hreflang="en" href="https://ortrad.com/" />
+    <xhtml:link rel="alternate" hreflang="ja" href="https://ortrad.com/" />
+  </url>
+
+  <!-- About Page -->
+  <url>
+    <loc>https://ortrad.com/about</loc>
+    <lastmod>2025-02-27</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+    <xhtml:link rel="alternate" hreflang="en" href="https://ortrad.com/about" />
+    <xhtml:link rel="alternate" hreflang="ja" href="https://ortrad.com/about" />
+  </url>
+
+  <!-- Search Page -->
+  <url>
+    <loc>https://ortrad.com/search</loc>
+    <lastmod>2025-02-27</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+    <xhtml:link rel="alternate" hreflang="en" href="https://ortrad.com/search" />
+    <xhtml:link rel="alternate" hreflang="ja" href="https://ortrad.com/search" />
+  </url>
+</urlset>

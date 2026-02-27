@@ -1,0 +1,17 @@
+# robots.txt for OrtRad
+# https://ortrad.com/
+
+User-agent: *
+Allow: /
+
+# Sitemap
+Sitemap: https://ortrad.com/sitemap.xml
+
+# Disallow specific paths
+Disallow: /api/
+Disallow: /admin/
+Disallow: /sign-in
+Disallow: /sign-up
+
+# Crawl delay (optional, prevents overloading)
+Crawl-delay: 1
