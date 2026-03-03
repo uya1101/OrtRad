@@ -17,32 +17,73 @@ export interface ParsedRssItem {
 }
 
 /**
- * Parse PubMed XML response
+ * Extract text content from XML tag
  */
-export function parsePubmedXml(xmlString: string): ParsedArticle | null {
+function extractTagText(xml: string, tagName: string): string | null {
+  // Match <tagName>content</tagName> or <tagName attr="value">content</tagName>
+  const regex = new RegExp(`<${tagName}[^>]*>(.*?)</${tagName}>`, 's');
+  const match = xml.match(regex);
+  if (match && match[1]) {
+    // Remove CDATA wrapper if present
+    return match[1].replace(/^<!\[CDATA\[|\]\]>$/g, '').trim();
+  }
+  return null;
+}
+
+/**
+ * Extract text content from multiple XML tags
+ */
+function extractMultipleTagTexts(xml: string, tagName: string): string[] {
+  const results: string[] = [];
+  const regex = new RegExp(`<${tagName}[^>]*>(.*?)</${tagName}>`, 'gs');
+  let match;
+
+  while ((match = regex.exec(xml)) !== null) {
+    if (match[1]) {
+      const text = match[1].replace(/^<!\[CDATA\[|\]\]>$/g, '').trim();
+      if (text) results.push(text);
+    }
+  }
+
+  return results;
+}
+
+/**
+ * Extract attribute value from XML tag
+ */
+function extractAttribute(xml: string, tagName: string, attrName: string): string | null {
+  const regex = new RegExp(`<${tagName}[^>]*\\s${attrName}=["']([^"']*)["'][^>]*>`, 'i');
+  const match = xml.match(regex);
+  return match ? match[1] : null;
+}
+
+/**
+ * Parse a single PubMed article from XML
+ */
+function parseSinglePubmedArticle(articleXml: string): ParsedArticle | null {
   try {
-    const parser = new DOMParser();
-    const doc = parser.parseFromString(xmlString, 'text/xml');
-
-    const article = doc.querySelector('PubmedArticle');
-    if (!article) return null;
-
     // Get PMID
-    const pmidElement = article.querySelector('PMID');
-    const pmid = pmidElement?.textContent?.trim();
+    const pmid = extractTagText(articleXml, 'PMID');
     if (!pmid) return null;
 
     // Get Title
-    const titleElement = article.querySelector('ArticleTitle');
-    const title = titleElement?.textContent?.trim() || '';
+    const title = extractTagText(articleXml, 'ArticleTitle');
+    if (!title) return null;
 
     // Get Authors
     const authors: string[] = [];
-    const authorList = article.querySelectorAll('Author');
-    for (const author of authorList) {
-      const lastName = author.querySelector('LastName')?.textContent?.trim();
-      const foreName = author.querySelector('ForeName')?.textContent?.trim();
-      const initials = author.querySelector('Initials')?.textContent?.trim();
+    const lastNameRegex = /<LastName>(.*?)<\/LastName>/gs;
+    const foreNameRegex = /<ForeName>(.*?)<\/ForeName>/gs;
+    const initialsRegex = /<Initials>(.*?)<\/Initials>/gs;
+
+    let lastNameMatch, foreNameMatch, initialsMatch;
+    while ((lastNameMatch = lastNameRegex.exec(articleXml)) !== null) {
+      const lastName = lastNameMatch[1].trim();
+      foreNameMatch = foreNameRegex.exec(articleXml);
+      initialsMatch = initialsRegex.exec(articleXml);
+
+      const foreName = foreNameMatch ? foreNameMatch[1].trim() : '';
+      const initials = initialsMatch ? initialsMatch[1].trim() : '';
 
       let authorName = '';
       if (lastName && foreName) {
@@ -59,24 +100,22 @@ export function parsePubmedXml(xmlString: string): ParsedArticle | null {
     }
 
     // Get Journal
-    const journalElement = article.querySelector('Journal > Title');
-    const journal = journalElement?.textContent?.trim() || '';
+    const journal = extractTagText(articleXml, 'Title') || '';
 
     // Get Abstract
-    const abstractElement = article.querySelector('AbstractText');
-    const abstract = abstractElement?.textContent?.trim() || null;
+    const abstract = extractTagText(articleXml, 'AbstractText');
 
-    // Get Published Date (from ArticleDate or PubDate)
-    const pubDateElement = article.querySelector('ArticleDate');
-    const year = pubDateElement?.querySelector('Year')?.textContent?.trim();
-    const month = pubDateElement?.querySelector('Month')?.textContent?.trim();
-    const day = pubDateElement?.querySelector('Day')?.textContent?.trim();
-
+    // Get Published Date
     let publishedAt: string | null = null;
-    if (year) {
-      const monthStr = month || '01';
-      const dayStr = day || '01';
-      publishedAt = `${year}-${monthStr}-${dayStr}T00:00:00Z`;
+    const yearMatch = articleXml.match(/<Year>(\d{4})<\/Year>/);
+    const monthMatch = articleXml.match(/<Month>(\d{1,2})<\/Month>/);
+    const dayMatch = articleXml.match(/<Day>(\d{1,2})<\/Day>/);
+
+    if (yearMatch) {
+      const year = yearMatch[1];
+      const month = monthMatch ? monthMatch[1].padStart(2, '0') : '01';
+      const day = dayMatch ? dayMatch[1].padStart(2, '0') : '01';
+      publishedAt = `${year}-${month}-${day}T00:00:00Z`;
     }
 
     return {
@@ -89,8 +128,33 @@ export function parsePubmedXml(xmlString: string): ParsedArticle | null {
       source_url: `https://pubmed.ncbi.nlm.nih.gov/${pmid}/`,
     };
   } catch (error) {
-    console.error('Error parsing PubMed XML:', error);
+    console.error('Error parsing single PubMed article:', error);
     return null;
+  }
+}
+
+/**
+ * Parse PubMed XML response (returns array of articles)
+ */
+export function parsePubmedXml(xmlString: string): ParsedArticle[] {
+  try {
+    const articles: ParsedArticle[] = [];
+
+    // Split by PubmedArticle tag
+    const articleRegex = /<PubmedArticle>[\s\S]*?<\/PubmedArticle>/g;
+    let match;
+
+    while ((match = articleRegex.exec(xmlString)) !== null) {
+      const article = parseSinglePubmedArticle(match[0]);
+      if (article) {
+        articles.push(article);
+      }
+    }
+
+    return articles;
+  } catch (error) {
+    console.error('Error parsing PubMed XML:', error);
+    return [];
   }
 }
 
@@ -99,39 +163,48 @@ export function parsePubmedXml(xmlString: string): ParsedArticle | null {
  */
 export function parseRssFeed(xmlString: string, source: string): ParsedRssItem[] {
   try {
-    const parser = new DOMParser();
-    const doc = parser.parseFromString(xmlString, 'text/xml');
-
     const items: ParsedRssItem[] = [];
 
-    // Check if RSS or Atom
-    const rssRoot = doc.querySelector('rss');
-    const atomRoot = doc.querySelector('feed');
+    // Check if RSS 2.0
+    if (xmlString.includes('<rss') || xmlString.includes('<item>')) {
+      const itemRegex = /<item>[\s\S]*?<\/item>/g;
+      let match;
 
-    if (rssRoot) {
-      // RSS 2.0
-      const rssItems = doc.querySelectorAll('channel > item');
-      for (const item of rssItems) {
-        const title = item.querySelector('title')?.textContent?.trim() || '';
-        const link = item.querySelector('link')?.textContent?.trim() || '';
-        const pubDate = item.querySelector('pubDate')?.textContent?.trim() || null;
-        const description = item.querySelector('description')?.textContent?.trim() || null;
-        const guid = item.querySelector('guid')?.textContent?.trim() || link;
+      while ((match = itemRegex.exec(xmlString)) !== null) {
+        const itemXml = match[0];
+
+        const title = extractTagText(itemXml, 'title');
+        const link = extractTagText(itemXml, 'link');
+        const pubDate = extractTagText(itemXml, 'pubDate');
+        const description = extractTagText(itemXml, 'description');
+        const guid = extractTagText(itemXml, 'guid');
 
         if (title && link) {
-          items.push({ title, link, pubDate, description, guid });
+          items.push({
+            title,
+            link,
+            pubDate,
+            description,
+            guid: guid || link,
+          });
         }
       }
-    } else if (atomRoot) {
-      // Atom
-      const atomEntries = doc.querySelectorAll('entry');
-      for (const entry of atomEntries) {
-        const title = entry.querySelector('title')?.textContent?.trim() || '';
-        const linkElement = entry.querySelector('link');
-        const link = linkElement?.getAttribute('href') || '';
-        const published = entry.querySelector('published')?.textContent?.trim() || null;
-        const summary = entry.querySelector('summary')?.textContent?.trim() || null;
-        const id = entry.querySelector('id')?.textContent?.trim() || link;
+    }
+    // Check if Atom
+    else if (xmlString.includes('<feed') || xmlString.includes('<entry>')) {
+      const entryRegex = /<entry>[\s\S]*?<\/entry>/g;
+      let match;
+
+      while ((match = entryRegex.exec(xmlString)) !== null) {
+        const entryXml = match[0];
+
+        const title = extractTagText(entryXml, 'title');
+        const published = extractTagText(entryXml, 'published');
+        const summary = extractTagText(entryXml, 'summary');
+        const id = extractTagText(entryXml, 'id');
+
+        // Get link from <link href="..."> format
+        const link = extractAttribute(entryXml, 'link', 'href');
 
         if (title && link) {
           items.push({
@@ -139,7 +212,7 @@ export function parseRssFeed(xmlString: string, source: string): ParsedRssItem[]
             link,
             pubDate: published,
             description: summary,
-            guid: id
+            guid: id || link,
           });
         }
       }

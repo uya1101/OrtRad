@@ -290,7 +290,7 @@ serve(async (req) => {
 
     // Check authorization
     const authHeader = req.headers.get('authorization');
-    const serviceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+    const serviceKey = Deno.env.get('SERVICE_ROLE_KEY');
     if (authHeader !== `Bearer ${serviceKey}`) {
       return new Response(
         JSON.stringify({ error: 'Unauthorized' }),

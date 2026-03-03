@@ -7,27 +7,33 @@ export interface RssFeed {
 
 export const RSS_FEEDS: RssFeed[] = [
   {
-    source: 'jaaos',
-    name: 'JAAOS',
-    url: 'https://journals.lww.com/jaaos/pages/feed.aspx',
+    source: 'jbjs',
+    name: 'JBJS (Journal of Bone and Joint Surgery)',
+    url: 'https://journals.lww.com/jbjsjournal/_layouts/15/15/OAKS rss.aspx?Feed=JBJS',
     type: 'rss'
   },
   {
-    source: 'radiology',
-    name: 'Radiology (RSNA)',
-    url: 'https://pubs.rsna.org/action/showFeed?type=etoc&feed=rss&jc=radiology',
+    source: 'bone_joint',
+    name: 'The Bone & Joint Journal',
+    url: 'https://journals.sagepub.com/action/showFeed?type=etoc&feed=rss&jc=bonj',
     type: 'rss'
   },
   {
-    source: 'eur_radiology',
-    name: 'European Radiology',
-    url: 'https://link.springer.com/search.rss?search-within=Journal&facet-journal-id=330&query=orthopedic',
+    source: 'acta_ortho',
+    name: 'Acta Orthopaedica',
+    url: 'https://journals.sagepub.com/action/showFeed?type=etoc&feed=rss&jc=acor',
     type: 'rss'
   },
   {
-    source: 'rsna',
-    name: 'RSNA News',
-    url: 'https://www.rsna.org/news/rsna-news-rss',
+    source: 'clinical_ortho',
+    name: 'Clinical Orthopaedics and Related Research',
+    url: 'https://link.springer.com/search.rss?facet-journal-id=3265',
+    type: 'rss'
+  },
+  {
+    source: 'aaos',
+    name: 'AAOS News',
+    url: 'https://www.aaos.org/rss/',
     type: 'rss'
   }
 ];

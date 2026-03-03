@@ -17,6 +17,7 @@ import AdminSources from './pages/admin/AdminSources';
 import AdminLogs from './pages/admin/AdminLogs';
 import AdminSettings from './pages/admin/AdminSettings';
 import { SignIn } from '@clerk/clerk-react';
+import { DebugCheck } from './components/DebugCheck'; // ← 追加
 
 // Protected Route Component
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
@@ -106,15 +107,15 @@ function AppContent() {
         <Background />
         <Header />
 
+        {/* ★ デバッグ用：確認が終わったら削除 */}
+        <DebugCheck />
+
         <Routes>
-          {/* Public Routes */}
           <Route path="/" element={<HomePage />} />
           <Route path="/article/:id" element={<ArticlePage />} />
           <Route path="/search" element={<SearchPage />} />
           <Route path="/about" element={<About />} />
           <Route path="/admin" element={<Navigate to="/admin/dashboard" replace />} />
-
-          {/* Admin Routes - Protected */}
           <Route path="/admin/dashboard" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
           <Route path="/admin/articles" element={<AdminRoute><AdminArticles /></AdminRoute>} />
           <Route path="/admin/sources" element={<AdminRoute><AdminSources /></AdminRoute>} />

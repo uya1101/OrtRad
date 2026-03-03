@@ -6,7 +6,7 @@ CREATE EXTENSION IF NOT EXISTS "pg_trgm";
 
 -- articles table
 CREATE TABLE articles (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   title TEXT NOT NULL,
   title_ja TEXT,
   authors TEXT[] DEFAULT '{}',
@@ -41,7 +41,7 @@ CREATE INDEX idx_articles_fts ON articles
 
 -- categories table
 CREATE TABLE categories (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   slug TEXT UNIQUE NOT NULL,
   name_en TEXT NOT NULL,
   name_ja TEXT NOT NULL,
@@ -56,7 +56,7 @@ CREATE INDEX idx_categories_sort_order ON categories(sort_order);
 
 -- trend_keywords table
 CREATE TABLE trend_keywords (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   keyword_en TEXT NOT NULL,
   keyword_ja TEXT,
   count INT DEFAULT 0,
@@ -71,7 +71,7 @@ CREATE INDEX idx_trend_keywords_count ON trend_keywords(count DESC);
 
 -- collection_logs table
 CREATE TABLE collection_logs (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   source TEXT NOT NULL,
   status TEXT DEFAULT 'running' CHECK (status IN ('pending', 'running', 'completed', 'failed')),
   articles_found INT DEFAULT 0,
@@ -87,7 +87,7 @@ CREATE INDEX idx_collection_logs_status ON collection_logs(status);
 
 -- admin_settings table
 CREATE TABLE admin_settings (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   key TEXT UNIQUE NOT NULL,
   value JSONB DEFAULT '{}',
   updated_at TIMESTAMPTZ DEFAULT NOW()

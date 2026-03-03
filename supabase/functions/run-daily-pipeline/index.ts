@@ -126,9 +126,9 @@ serve(async (req) => {
 
     // Check authorization
     const authHeader = req.headers.get('authorization');
-    const serviceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+    const serviceKey = Deno.env.get('SERVICE_ROLE_KEY');
     if (!serviceKey) {
-      console.error('SUPABASE_SERVICE_ROLE_KEY not set');
+      console.error('SERVICE_ROLE_KEY not set');
       return new Response(
         JSON.stringify({ error: 'Service role key not configured' }),
         { status: 500, headers: { 'Content-Type': 'application/json' } }

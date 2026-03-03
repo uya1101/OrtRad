@@ -1,13 +1,12 @@
 [api]
 enabled = true
 port = 54321
-schema = "public"
 max_rows = 1000
 
 [db]
 port = 54322
 shadow_port = 54320
-major_version = "15"
+major_version = "17"
 
 [studio]
 enabled = true
@@ -23,7 +22,6 @@ pop3_port = 54326
 [storage]
 enabled = true
 file_size_limit = "50MiB"
-image_transformation_enabled = true
 
 [auth]
 enabled = true
@@ -31,9 +29,20 @@ site_url = "http://127.0.0.1:3000"
 additional_redirect_urls = ["https://127.0.0.1:3000"]
 jwt_expiry = 3600
 
-[edge_functions]
-enabled = true
-port = 54321
-
 [analytics]
 enabled = false
+
+[functions.run-daily-pipeline]
+verify_jwt = false
+
+[functions.collect-pubmed]
+verify_jwt = false
+
+[functions.collect-rss]
+verify_jwt = false
+
+[functions.summarize-articles]
+verify_jwt = false
+
+[functions.generate-trends]
+verify_jwt = false

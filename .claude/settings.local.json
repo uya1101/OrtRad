@@ -3,7 +3,14 @@
     "allow": [
       "Bash(npm run build)",
       "Bash(npm run dev)",
-      "Bash(ls -la /Users/uya/Desktop/OrtRad/.env* 2>&1 | head -20)"
+      "Bash(ls -la /Users/uya/Desktop/OrtRad/.env* 2>&1 | head -20)",
+      "Bash(supabase functions deploy collect-rss --no-verify-jwt)",
+      "Bash(supabase functions deploy collect-rss --no-verify-jwt && supabase functions deploy collect-pubmed --no-verify-jwt)",
+      "Bash(npx create-next-app@latest frontend --typescript --tailwind --app --no-src-dir --import-alias \"@/*\" --use-npm --eslint)",
+      "Bash(npx create-next-app@latest frontend --typescript --tailwind --app --no-src-dir --import-alias \"@/*\" --use-npm --eslint --yes --no-compile)",
+      "Bash(cd /Users/uya/Desktop/OrtRad/frontend && npm install @supabase/supabase-js date-fns lucide-react clsx tailwind-merge)",
+      "Bash(cat > /Users/uya/Desktop/OrtRad/frontend/app/icon.svg << 'EOF'\n<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 100 100\">\n  <rect width=\"100\" height=\"100\" fill=\"#3b82f6\" rx=\"20\"/>\n  <text x=\"50\" y=\"65\" text-anchor=\"middle\" font-size=\"50\" font-weight=\"bold\" fill=\"white\">O</text>\n</svg>\nEOF)",
+      "Bash(ls -la /Users/uya/Desktop/OrtRad/frontend/components/*/)"
     ]
   }
 }

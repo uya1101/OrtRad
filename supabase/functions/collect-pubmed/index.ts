@@ -1,60 +1,20 @@
 import { serve } from 'https://deno.land/std@0.208.0/http/server.ts';
 import { supabase, insertArticle, ArticleInput } from '../_shared/supabase-client.ts';
-import { parsePubmedXml } from '../_shared/xml-parser.ts';
+import { parsePubmedXml, ParsedArticle } from '../_shared/xml-parser.ts';
 import { logCollectionResult } from '../_shared/logger.ts';
 
 // PubMed API base URLs
 const ESEARCH_URL = 'https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi';
 const EFETCH_URL = 'https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi';
 
-// Rate limiting: 3 requests per second
-const REQUEST_DELAY_MS = 400; // Safe margin below 1000ms limit
+// Rate limiting: 3 requests per second (400ms delay = 2.5 req/s for safety margin)
+const REQUEST_DELAY_MS = 400;
 const BATCH_SIZE = 10;
 
 interface PubmedSearchResult {
   esearchresult: {
     idlist: string[];
     count: string;
-  };
-}
-
-interface PubmedArticle {
-  MedlineCitation: {
-    Article?: {
-      ArticleTitle?: {
-        __text?: string;
-      };
-      AuthorList?: {
-        Author?: Array<{
-          LastName?: { __text?: string };
-          ForeName?: { __text?: string };
-          Initials?: { __text?: string };
-        }>;
-      };
-      Journal?: {
-        Title?: {
-          __text?: string;
-        };
-      };
-      Abstract?: {
-        AbstractText?: {
-          __text?: string;
-        };
-      };
-      ArticleDate?: {
-        Year?: { __text?: string };
-        Month?: { __text?: string };
-        Day?: { __text?: string };
-      };
-    };
-  };
-  PubmedData?: {
-    ArticleIdList?: {
-      ArticleId?: Array<{
-        IdType?: string;
-        __text?: string;
-      }>;
-    };
   };
 }
 
@@ -114,8 +74,8 @@ async function searchPubmed(keywords: string[]): Promise<string[]> {
   }
 }
 
-async function fetchPubmedArticles(pmids: string[]): Promise<any[]> {
-  const articles: any[] = [];
+async function fetchPubmedArticles(pmids: string[]): Promise<ParsedArticle[]> {
+  const articles: ParsedArticle[] = [];
 
   // Process in batches
   for (let i = 0; i < pmids.length; i += BATCH_SIZE) {
@@ -136,16 +96,9 @@ async function fetchPubmedArticles(pmids: string[]): Promise<any[]> {
       }
 
       const xmlText = await response.text();
-      const parser = new DOMParser();
-      const doc = parser.parseFromString(xmlText, 'text/xml');
+      const parsed = parsePubmedXml(xmlText);
 
-      const pubmedArticles = doc.querySelectorAll('PubmedArticle');
-      for (const article of pubmedArticles) {
-        const parsed = parsePubmedXml(article.outerHTML);
-        if (parsed) {
-          articles.push(parsed);
-        }
-      }
+      articles.push(...parsed);
 
       // Rate limiting
       await sleep(REQUEST_DELAY_MS);
@@ -157,7 +110,7 @@ async function fetchPubmedArticles(pmids: string[]): Promise<any[]> {
   return articles;
 }
 
-async function storeArticles(articles: any[]): Promise<{ found: number; new: number }> {
+async function storeArticles(articles: ParsedArticle[]): Promise<{ found: number; new: number }> {
   let found = articles.length;
   let inserted = 0;
 
@@ -200,7 +153,16 @@ serve(async (req) => {
 
     // Check authorization
     const authHeader = req.headers.get('authorization');
-    const serviceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+    const serviceKey = Deno.env.get('SERVICE_ROLE_KEY');
+
+    if (!serviceKey) {
+      console.error('SERVICE_ROLE_KEY is not configured');
+      return new Response(
+        JSON.stringify({ error: 'Server configuration error' }),
+        { status: 500, headers: { 'Content-Type': 'application/json' } }
+      );
+    }
+
     if (authHeader !== `Bearer ${serviceKey}`) {
       return new Response(
         JSON.stringify({ error: 'Unauthorized' }),

@@ -9,6 +9,13 @@ const resources = {
   en: { translation: en },
 };
 
+// 🟢 コンソールメッセージを抑制
+const originalConsoleLog = console.log;
+console.log = (...args: any[]) => {
+  if (typeof args[0] === 'string' && args[0].includes('i18next')) return;
+  originalConsoleLog(...args);
+};
+
 i18n
   .use(initReactI18next)
   .init({
@@ -18,6 +25,11 @@ i18n
     interpolation: {
       escapeValue: false,
     },
+    saveMissing: false,
+  })
+  .then(() => {
+    // 🟢 初期化完了後にconsole.logを元に戻す
+    console.log = originalConsoleLog;
   });
 
 export default i18n;

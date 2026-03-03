@@ -138,7 +138,16 @@ serve(async (req) => {
 
     // Check authorization
     const authHeader = req.headers.get('authorization');
-    const serviceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+    const serviceKey = Deno.env.get('SERVICE_ROLE_KEY');
+
+    if (!serviceKey) {
+      console.error('SERVICE_ROLE_KEY is not configured');
+      return new Response(
+        JSON.stringify({ error: 'Server configuration error' }),
+        { status: 500, headers: { 'Content-Type': 'application/json' } }
+      );
+    }
+
     if (authHeader !== `Bearer ${serviceKey}`) {
       return new Response(
         JSON.stringify({ error: 'Unauthorized' }),
@@ -193,6 +202,9 @@ serve(async (req) => {
     );
   } catch (error) {
     console.error('Error in collect-rss:', error);
+
+    // Log error
+    await logCollectionResult('rss', 'failed', 0, 0, String(error));
 
     return new Response(
       JSON.stringify({ error: String(error) }),
