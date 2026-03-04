@@ -44,7 +44,10 @@
     "return_home": "→ RETURN_HOME",
     "return_dashboard": "← RETURN_TO_DASHBOARD",
     "et_al": "他",
-    "unknown": "不明"
+    "unknown": "不明",
+    "summary_generating": "要約を生成中です...",
+    "summary_not_available": "要約がありません",
+    "not_available": "利用不可"
   },
   "search": {
     "placeholder": "キーワードを入力して検索...",

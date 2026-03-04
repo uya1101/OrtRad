@@ -93,14 +93,14 @@ export default function ArticlePage() {
   }, [article?.published_at, formatDate]);
 
   const title = useMemo(() => {
-    return getArticleField(article!, 'title') as string;
+    return article ? getArticleField(article, 'title') as string : '';
   }, [article, getArticleField]);
 
   const categoryColors = useMemo(() => {
-    return article?.categories.map((cat, i) => {
+    return (article?.categories || []).map((cat, i) => {
       const colors = [T.neonBlue, T.neonTeal, T.neonPurple, T.neonAmber];
       return CATEGORY_COLORS[cat] || colors[i % colors.length] || T.neonBlue;
-    }) || [];
+    });
   }, [article?.categories]);
 
   if (isLoading && !article) {
@@ -333,7 +333,7 @@ export default function ArticlePage() {
         {/* AI Summaries */}
         <div style={{ marginBottom: 32 }}>
           {/* English Summary */}
-          {article.summary_en && (lang === 'en' || !article.summary_ja) && (
+          {(article.summary_en || (!article.summary_ja && !article.summary_en)) && (
             <div style={{ marginBottom: 20 }}>
               <h3 style={{
                 fontFamily: "'Rajdhani',sans-serif", fontWeight: 600,
@@ -351,14 +351,14 @@ export default function ArticlePage() {
                   fontSize: "0.9rem", color: T.textSecond,
                   margin: 0, whiteSpace: "pre-wrap",
                 }}>
-                  {article.summary_en}
+                  {article.summary_en || article.abstract || t('article.summary_not_available')}
                 </p>
               </div>
             </div>
           )}
 
           {/* Japanese Summary */}
-          {article.summary_ja && lang === 'ja' && (
+          {(article.summary_ja || lang === 'ja') && (
             <div>
               <h3 style={{
                 fontFamily: "'Rajdhani',sans-serif", fontWeight: 600,
@@ -376,7 +376,7 @@ export default function ArticlePage() {
                   fontSize: "0.9rem", color: T.textSecond,
                   margin: 0, whiteSpace: "pre-wrap",
                 }}>
-                  {article.summary_ja}
+                  {article.summary_ja || t('article.summary_generating')}
                 </p>
               </div>
             </div>
@@ -384,7 +384,7 @@ export default function ArticlePage() {
         </div>
 
         {/* Categories */}
-        {article.categories.length > 0 && (
+        {article.categories && article.categories.length > 0 && (
           <div style={{ marginBottom: 32 }}>
             <h3 style={{
               fontFamily: "'Rajdhani',sans-serif", fontWeight: 600,
@@ -393,7 +393,7 @@ export default function ArticlePage() {
               カテゴリ / Categories
             </h3>
             <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
-              {article.categories.map((cat, i) => (
+              {(article.categories || []).map((cat, i) => (
                 <span key={cat} style={{
                   display: "inline-flex", alignItems: "center", gap: 6,
                   padding: "6px 14px", borderRadius: 6,
@@ -514,7 +514,7 @@ export default function ArticlePage() {
                       display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical",
                       overflow: "hidden", margin: 0,
                     }}>
-                      {getArticleField(rel, 'summary_ja') as string}
+                      {getArticleField(rel, 'summary_ja') as string || rel.abstract?.substring(0, 150) || t('article.not_available')}
                     </p>
                   </div>
                 </Link>

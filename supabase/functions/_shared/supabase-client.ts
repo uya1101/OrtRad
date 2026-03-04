@@ -47,12 +47,17 @@ export async function insertArticle(article: ArticleInput): Promise<{ success: b
       return { success: false, error: 'Article already exists' };
     }
 
-    // Insert new article
+    // Insert new article with default values
     const { data, error } = await supabase
       .from('articles')
       .insert({
         ...article,
         status: article.status || 'draft',
+        categories: article.categories || [],
+        authors: article.authors || [],
+        tags: article.tags || [],
+        is_rt_relevant: article.is_rt_relevant || false,
+        trend_score: article.trend_score || 0,
       })
       .select('id')
       .single();
