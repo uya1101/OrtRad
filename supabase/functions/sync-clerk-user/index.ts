@@ -3,7 +3,7 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import {
   Webhook,
   WebhookRequiredHeaders,
-} from 'https://esm.sh/svix@1.26.1';
+} from 'npm:svix@1.21.0';
 
 // Initialize Supabase client with service role
 const supabaseUrl = Deno.env.get('SUPABASE_URL') || '';
@@ -44,6 +44,7 @@ interface ClerkUser {
   public_metadata: Record<string, any>;
   private_metadata: Record<string, any>;
   unsafe_metadata: Record<string, any>;
+  primary_email_address_id?: string;
 }
 
 // Initialize Svix webhook verifier

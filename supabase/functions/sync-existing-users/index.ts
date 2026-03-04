@@ -1,6 +1,6 @@
 import { serve } from 'https://deno.land/std@0.208.0/http/server.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
-import { Webhook, WebhookRequiredHeaders } from 'https://esm.sh/svix@1.26.1';
+import { Webhook, WebhookRequiredHeaders } from 'npm:svix@1.21.0';
 
 // Initialize Supabase client with service role
 const supabaseUrl = Deno.env.get('SUPABASE_URL') || '';

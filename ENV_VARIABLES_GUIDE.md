@@ -18,7 +18,7 @@
 | `VITE_SUPABASE_URL` | ✅ 必須 | Supabase Dashboard |
 | `VITE_SUPABASE_ANON_KEY` | ✅ 必須 | Supabase Dashboard |
 | `VITE_CLERK_PUBLISHABLE_KEY` | ✅ 必須 | Clerk Dashboard |
-| `GEMINI_API_KEY` | ❌ 不必要 | Edge Functions用 |
+| `VITE_GEMINI_API_KEY` | ❌ **不要** | フロントエンド側では使用されません。Edge Functionsでのみ使用されます（`summarize-articles`, `generate-trends`） |
 
 ### 重要な点
 
@@ -80,8 +80,8 @@ npx supabase functions serve collect-pubmed --env-file .env.local
 
 ```env
 SUPABASE_URL=http://127.0.0.1:54321
-SUPABASE_SERVICE_ROLE_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
-GEMINI_API_KEY=AIzaSyC83ahRlsC9XR1N8HFzv0t1ZEji56w6N4Y
+SUPABASE_SERVICE_ROLE_KEY=your_service_role_key_here
+GEMINI_API_KEY=your_gemini_api_key_here
 ```
 
 #### Edge Functions（リモート）
@@ -113,7 +113,7 @@ npx supabase functions deploy summarize-articles --no-verify-jwt
 |------|---------|----------|
 | `VITE_SUPABASE_URL` | Supabase Dashboard → Project Settings → API | フロントエンド |
 | `VITE_SUPABASE_ANON_KEY` | Supabase Dashboard → Project Settings → API | フロントエンド |
-| `SUPABASE_SERVICE_ROLE_KEY` | Supabase Dashboard → Project Settings → API | Edge Functions |
+| `SUPABASE_SERVICE_ROLE_KEY` | Supabase Dashboard → Project Settings → API → Service Role key | Edge Functions |
 | `VITE_CLERK_PUBLISHABLE_KEY` | Clerk Dashboard → API Keys → Publishable | フロントエンド |
 | `CLERK_WEBHOOK_SECRET` | Clerk Dashboard → Webhooks → Signing Secret | Edge Functions |
 | `GEMINI_API_KEY` | [Google AI Studio](https://makersuite.google.com/app/apikey) | Edge Functions |
