@@ -1,11 +1,86 @@
-import { serve } from 'https://deno.land/std@0.208.0/http/server.ts';
-import { supabase } from '../_shared/supabase-client.ts';
-import { logCollectionResult } from '../_shared/logger.ts';
+/**
+ * Local article summarization script
+ *
+ * This script runs locally to generate summaries and categories,
+ * then updates the database directly. This avoids Edge Functions resource limits.
+ *
+ * Usage: deno run --allow-env --allow-net --allow-read scripts/local-summarize.ts
+ */
+
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+
+// Load .env.local file
+const envPath = '.env.local';
+let supabaseUrl = Deno.env.get('VITE_SUPABASE_URL') || Deno.env.get('SUPABASE_URL') || '';
+let supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || '';
+let geminiKey = Deno.env.get('GEMINI_API_KEY') || '';
+
+console.log('🔧 Configuration Check:');
+console.log(`  - Supabase URL: ${supabaseUrl ? 'SET' : 'MISSING'}`);
+console.log(`  - Supabase Key: ${supabaseKey ? 'SET (length=' + supabaseKey.length + ')' : 'MISSING'}`);
+console.log(`  - Gemini Key: ${geminiKey ? 'SET (length=' + geminiKey.length + ')' : 'MISSING'}`);
+
+try {
+  const envContent = await Deno.readTextFile(envPath);
+  console.log(`📄 Reading ${envPath}...`);
+  const lines = envContent.split('\n');
+
+  lines.forEach((line, index) => {
+    const trimmedLine = line.trim();
+    if (!trimmedLine) return;  // Skip empty lines
+
+    // Check for key-value pairs
+    const equalIndex = line.indexOf('=');
+    if (equalIndex === -1) {
+      console.log(`  ⚠️  Skipping line ${index + 1}: no '=' found - "${trimmedLine.substring(0, 50)}..."`);
+      return;
+    }
+
+    const key = line.substring(0, equalIndex).trim();
+    const value = line.substring(equalIndex + 1).trim();
+
+    // Skip comments and empty keys
+    if (!key || key.startsWith('#') || key.startsWith('→')) return;
+
+    if (key === 'VITE_SUPABASE_URL' || key === 'SUPABASE_URL') {
+      supabaseUrl = value;
+      console.log(`  ✅ Set supabaseUrl from ${key}`);
+    } else if (key === 'SUPABASE_SERVICE_ROLE_KEY') {
+      supabaseKey = value;
+      console.log(`  ✅ Set supabaseKey from ${key}`);
+    } else if (key === 'GEMINI_API_KEY') {
+      geminiKey = value;
+      console.log(`  ✅ Set geminiKey from ${key}`);
+    }
+  });
+
+  console.log(`📊 Parsed ${Object.keys({ supabaseUrl: !!supabaseUrl, supabaseKey: !!supabaseKey, geminiKey: !!geminiKey }).length} variables`);
+} catch (error) {
+  console.error('❌ Error reading .env.local:', error);
+}
+
+if (!supabaseUrl || !supabaseKey) {
+  console.error('❌ Error: Supabase URL or Key is missing. Check .env.local file.');
+  Deno.exit(1);
+}
+
+if (!geminiKey) {
+  console.error('❌ Error: Gemini API Key is missing. Check .env.local file.');
+  Deno.exit(1);
+}
+
+// Validate Supabase URL format
+if (!supabaseUrl.startsWith('https://')) {
+  console.error('❌ Error: Supabase URL must start with https://');
+  Deno.exit(1);
+}
+
+const supabase = createClient(supabaseUrl, supabaseKey);
 
 // Gemini API configuration
 const GEMINI_API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent';
 
-// Valid categories from database
+// Valid categories
 const VALID_CATEGORIES = [
   'general_orthopedics',
   'imaging_diagnostics',
@@ -17,9 +92,8 @@ const VALID_CATEGORIES = [
   'rehabilitation'
 ];
 
-// Rate limiting: 15 requests per minute
-const REQUEST_DELAY_MS = 5000; // 5 seconds = 12 RPM with safety margin
-const MAX_ARTICLES_PER_RUN = 10;
+// Processing configuration
+const REQUEST_DELAY_MS = 5000; // 5 seconds between requests
 const MAX_RETRIES = 3;
 
 interface GeminiRequest {
@@ -72,13 +146,13 @@ async function getDraftArticles(): Promise<ArticleSummary[]> {
       .select('id, title, journal, abstract')
       .eq('status', 'draft')
       .order('created_at', { ascending: false })
-      .limit(MAX_ARTICLES_PER_RUN);
+      .limit(10);
 
     if (error) throw error;
 
     return data || [];
   } catch (error) {
-    console.error('Error fetching draft articles:', error);
+    console.error('❌ Error fetching draft articles:', error);
     return [];
   }
 }
@@ -106,13 +180,11 @@ Abstract: ${article.abstract || 'Not available'}
 
 function extractJsonFromResponse(text: string): string | null {
   try {
-    // Try to find JSON between curly braces
     const jsonMatch = text.match(/\{[\s\S]*\}/);
     if (jsonMatch) {
       return jsonMatch[0];
     }
 
-    // Try to find JSON array
     const arrayMatch = text.match(/\[[\s\S]*\]/);
     if (arrayMatch) {
       return arrayMatch[0];
@@ -146,8 +218,7 @@ function validateCategories(categories: string[]): string[] {
 
 async function callGeminiAPI(
   article: ArticleSummary,
-  temperature: number,
-  apiKey: string
+  temperature: number
 ): Promise<{ success: boolean; summary?: ParsedSummary; error?: string }> {
   try {
     const prompt = buildPrompt(article);
@@ -162,7 +233,11 @@ async function callGeminiAPI(
       }
     };
 
-    const url = `${GEMINI_API_URL}?key=${apiKey}`;
+    const url = `${GEMINI_API_URL}?key=${geminiKey}`;
+    console.log(`🌐 Calling Gemini API...`);
+    console.log(`   URL: ${GEMINI_API_URL}/...`);
+    console.log(`   Article: ${article.title.substring(0, 40)}...`);
+
     const response = await fetch(url, {
       method: 'POST',
       headers: {
@@ -171,66 +246,68 @@ async function callGeminiAPI(
       body: JSON.stringify(requestBody),
     });
 
+    console.log(`   Response status: ${response.status}`);
+    console.log(`   Response headers: ${Object.fromEntries(response.headers.entries())}`);
+
     if (!response.ok) {
       if (response.status === 429) {
-        // Rate limit error
-        return { success: false, error: 'RATE_LIMIT' };
+        return { success: false, error: 'RATE_LIMIT (429: Too Many Requests)' };
       }
       const errorText = await response.text();
+      console.error(`   Error body: ${errorText}`);
       return { success: false, error: `Gemini API error: ${response.status} - ${errorText}` };
     }
 
     const data = await response.json() as GeminiResponse;
     const contentText = data.candidates?.[0]?.content?.parts?.[0]?.text;
 
+    console.log(`   Content length: ${contentText?.length || 0} characters`);
+
     if (!contentText) {
       return { success: false, error: 'Empty response from Gemini' };
     }
 
-    // Extract JSON from response
     const jsonText = extractJsonFromResponse(contentText);
     if (!jsonText) {
+      console.error(`   Could not extract JSON from response. First 200 chars: ${contentText.substring(0, 200)}`);
       return { success: false, error: 'Could not extract JSON from response' };
     }
 
     const summary = JSON.parse(jsonText);
+    console.log(`   Generated summary for: ${summary.title_ja?.substring(0, 30)}...`);
 
-    // Validate summary structure
     if (!validateSummary(summary)) {
+      console.error(`   Invalid summary structure: ${JSON.stringify(summary).substring(0, 200)}...`);
       return { success: false, error: 'Invalid summary structure' };
     }
 
-    // Validate categories
     summary.categories = validateCategories(summary.categories);
 
-    // Ensure tags array
     if (!Array.isArray(summary.tags)) {
       summary.tags = [];
     }
 
     return { success: true, summary };
   } catch (error) {
-    console.error('Error calling Gemini API:', error);
+    console.error('❌ Error calling Gemini API:', error);
     return { success: false, error: String(error) };
   }
 }
 
 async function summarizeArticle(
-  article: ArticleSummary,
-  apiKey: string
+  article: ArticleSummary
 ): Promise<{ success: boolean; summary?: ParsedSummary; error?: string }> {
   let temperature = 0.3;
   let lastError = '';
 
   for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
-    const result = await callGeminiAPI(article, temperature, apiKey);
+    const result = await callGeminiAPI(article, temperature);
 
     if (result.success) {
       return result;
     }
 
     if (result.error === 'RATE_LIMIT') {
-      // Wait 60 seconds for rate limit
       console.log('Rate limit hit, waiting 60 seconds...');
       await sleep(60000);
       continue;
@@ -238,7 +315,6 @@ async function summarizeArticle(
 
     lastError = result.error || 'Unknown error';
 
-    // Increase temperature slightly for retry
     temperature = Math.min(temperature + 0.1, 1.0);
 
     console.log(`Attempt ${attempt + 1}/${MAX_RETRIES} failed (${lastError}), retrying with temperature ${temperature}...`);
@@ -275,119 +351,61 @@ async function updateArticle(
   }
 }
 
-serve(async (req) => {
-  console.log('summarize-articles function invoked');
-  const startTime = Date.now();
+async function processArticles() {
+  console.log('🔍 Fetching draft articles...');
 
-  try {
-    // Only allow POST from Supabase cron
-    if (req.method !== 'POST') {
-      return new Response(
-        JSON.stringify({ error: 'Method not allowed' }),
-        { status: 405, headers: { 'Content-Type': 'application/json' } }
-      );
-    }
+  const articles = await getDraftArticles();
 
-    // Check authorization
-    const authHeader = req.headers.get('authorization');
-    const serviceKey = Deno.env.get('SERVICE_ROLE_KEY');
-    if (authHeader !== `Bearer ${serviceKey}`) {
-      return new Response(
-        JSON.stringify({ error: 'Unauthorized' }),
-        { status: 401, headers: { 'Content-Type': 'application/json' } }
-      );
-    }
-
-    const geminiKey = Deno.env.get('GEMINI_API_KEY');
-    if (!geminiKey) {
-      console.error('GEMINI_API_KEY not set');
-      return new Response(
-        JSON.stringify({ error: 'Gemini API key not configured' }),
-        { status: 500, headers: { 'Content-Type': 'application/json' } }
-      );
-    }
-
-    // Step 1: Get draft articles
-    console.log('Fetching draft articles...');
-    const articles = await getDraftArticles();
-
-    if (articles.length === 0) {
-      console.log('No draft articles to process');
-      await logCollectionResult('summarize-articles', 'completed', 0, 0);
-      return new Response(
-        JSON.stringify({ message: 'No draft articles to process', processed: 0, published: 0 }),
-        { headers: { 'Content-Type': 'application/json' } }
-      );
-    }
-
-    console.log(`Found ${articles.length} draft articles to process`);
-
-    // Step 2: Process each article
-    let processed = 0;
-    let published = 0;
-    const errors: { id: string; error: string }[] = [];
-
-    for (const article of articles) {
-      console.log(`Processing article: ${article.title.substring(0, 50)}...`);
-
-      // Summarize article with Gemini
-      const result = await summarizeArticle(article, geminiKey);
-      processed++;
-
-      if (result.success && result.summary) {
-        // Update article
-        const updated = await updateArticle(article.id, result.summary);
-
-        if (updated) {
-          published++;
-          console.log(`✓ Published article: ${article.id}`);
-        } else {
-          console.error(`✗ Failed to update article: ${article.id}`);
-          errors.push({ id: article.id, error: 'Database update failed' });
-        }
-      } else {
-        console.error(`✗ Failed to summarize article: ${article.id} - ${result.error}`);
-        errors.push({ id: article.id, error: result.error || 'Unknown error' });
-      }
-
-      // Rate limiting delay
-      await sleep(REQUEST_DELAY_MS);
-    }
-
-    const duration = Date.now() - startTime;
-    console.log(`Summarization completed in ${duration}ms`);
-
-    // Log results
-    await logCollectionResult(
-      'summarize-articles',
-      'completed',
-      processed,
-      published
-    );
-
-    return new Response(
-      JSON.stringify({
-        message: 'Summarization completed',
-        processed,
-        published,
-        errors: errors.length,
-        duration_ms: duration,
-      }),
-      { headers: { 'Content-Type': 'application/json' } }
-    );
-  } catch (error) {
-    const duration = Date.now() - startTime;
-    console.error('Error in summarize-articles:', error);
-
-    // Log error
-    await logCollectionResult('summarize-articles', 'failed', 0, 0, String(error));
-
-    return new Response(
-      JSON.stringify({
-        error: String(error),
-        duration_ms: duration,
-      }),
-      { status: 500, headers: { 'Content-Type': 'application/json' } }
-    );
+  if (articles.length === 0) {
+    console.log('✨ No draft articles to process');
+    return;
   }
-});
+
+  console.log(`✅ Found ${articles.length} draft articles to process`);
+
+  let processed = 0;
+  let published = 0;
+  const errors: { id: string; error: string }[] = [];
+
+  for (const article of articles) {
+    console.log(`Processing article: ${article.title.substring(0, 50)}...`);
+
+    const result = await summarizeArticle(article);
+    processed++;
+
+    if (result.success && result.summary) {
+      const updated = await updateArticle(article.id, result.summary);
+
+      if (updated) {
+        published++;
+        console.log(`✅ Published: ${article.title.substring(0, 50)}...`);
+      } else {
+        console.error(`✗ Failed to update: ${article.title.substring(0, 50)}`);
+        errors.push({ id: article.id, error: 'Database update failed' });
+      }
+    } else {
+      console.error(`✗ Failed to summarize: ${article.title.substring(0, 50)} - ${result.error}`);
+      errors.push({ id: article.id, error: result.error || 'Unknown error' });
+    }
+
+    await sleep(REQUEST_DELAY_MS);
+  }
+
+  console.log('\n=== Summary ===');
+  console.log(`✅ Processed: ${processed} articles`);
+  console.log(`✅ Published: ${published} articles`);
+  console.log(`❌ Failed: ${errors.length} articles`);
+
+  if (errors.length > 0) {
+    console.log('\nErrors:');
+    errors.forEach(e => {
+      console.log(`  - ${e.id}: ${e.error}`);
+    });
+  }
+
+  console.log('\n✨ Done! Articles should now be visible on the site.');
+}
+
+// Main execution
+console.log('🚀 Starting local summarization...\n');
+processArticles();

@@ -2,20 +2,41 @@
  * Reset articles to draft status for testing summarize-articles function
  *
  * This script sets articles without summary/categories back to draft status
- * so the summarize-articles edge function can process them.
+ * so summarize-articles edge function can process them.
  *
  * Usage:
- * 1. Set SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY in .env
- * 2. Run: deno run --allow-env --allow-net scripts/reset-articles-to-draft.ts
+ * Run: deno run --allow-env --allow-net --allow-read scripts/reset-articles-to-draft.ts
  */
 
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
-const supabaseUrl = Deno.env.get('SUPABASE_URL') || '';
-const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || '';
+// Load .env.local file
+const envPath = '.env.local';
+let supabaseUrl = Deno.env.get('SUPABASE_URL');
+let supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+
+try {
+  const envContent = await Deno.readTextFile(envPath);
+  envContent.split('\n').forEach(line => {
+    const [key, ...valueParts] = line.split('=');
+    const value = valueParts.join('=').trim();
+    if (key && value && !key.startsWith('#')) {
+      // Handle both VITE_SUPABASE_URL and SUPABASE_URL
+      if (key === 'VITE_SUPABASE_URL') {
+        supabaseUrl = value;
+      } else if (key === 'SUPABASE_URL') {
+        supabaseUrl = value;
+      } else if (key === 'SUPABASE_SERVICE_ROLE_KEY') {
+        supabaseKey = value;
+      }
+    }
+  });
+} catch (error) {
+  console.log('ℹ️  .env.local not found, using environment variables');
+}
 
 if (!supabaseUrl || !supabaseKey) {
-  console.error('❌ Error: SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY must be set');
+  console.error('❌ Error: SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY must be set in .env.local');
   Deno.exit(1);
 }
 
@@ -74,10 +95,10 @@ async function resetArticlesToDraft() {
 
   if (updated > 0) {
     console.log('\n📝 Next steps:');
-    console.log('1. Run the summarize-articles edge function:');
+    console.log('1. Run summarize-articles edge function:');
     console.log('   curl -X POST https://your-project.supabase.co/functions/v1/summarize-articles \\');
     console.log('     -H "Authorization: Bearer YOUR_SERVICE_ROLE_KEY"');
-    console.log('2. Or run the daily pipeline:');
+    console.log('2. Or run daily pipeline:');
     console.log('   curl -X POST https://your-project.supabase.co/functions/v1/run-daily-pipeline \\');
     console.log('     -H "Authorization: Bearer YOUR_SERVICE_ROLE_KEY"');
   }

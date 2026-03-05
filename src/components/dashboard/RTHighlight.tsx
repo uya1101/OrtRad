@@ -14,7 +14,7 @@ interface RTHighlightProps {
 function ArticleItem({ article, index }: { article: Article; index: number }) {
   const { getLocalizedField } = useLanguage();
 
-  const authorsText = article.authors.length > 0
+  const authorsText = article.authors && article.authors.length > 0
     ? article.authors.slice(0, 3).join(', ') + (article.authors.length > 3 ? ' et al.' : '')
     : 'Unknown';
 
@@ -65,18 +65,18 @@ function ArticleItem({ article, index }: { article: Article; index: number }) {
               fontWeight: 600, fontSize: "0.95rem",
               color: T.textPrimary, lineHeight: 1.3, marginBottom: 4,
             }}>
-              {getLocalizedField(article.title, article.title_ja || article.title)}
+              {getLocalizedField(article.title, (article.title_ja || article.title) || 'Untitled')}
             </h3>
             <p style={{
               fontFamily: "'Noto Sans JP',sans-serif",
               fontSize: "0.78rem", color: T.textSecond,
               lineHeight: 1.5, marginBottom: 6,
             }}>
-              {article.summary_ja || article.summary_en || '要約なし'}
+              {(article.summary_ja || article.summary_en || article.abstract?.substring(0, 150)) || '要約なし'}
             </p>
             <div style={{ display: "flex", alignItems: "center", gap: 12, fontSize: "0.65rem" }}>
               <span style={{ color: T.textDim }}>
-                {article.journal} · {formattedDate}
+                {article.journal || 'Unknown'} · {formattedDate}
               </span>
               <span style={{ color: T.textDim }}>·</span>
               <span style={{ color: T.neonTeal }}>
@@ -155,9 +155,12 @@ export default function RTHighlight({ articles, isLoading }: RTHighlightProps) {
         }} />
 
         {rtArticles.length > 0 ? (
-          rtArticles.map((article, index) => (
-            <ArticleItem key={article.id} article={article} index={index} />
-          ))
+          rtArticles.map((article, index) => {
+            if (!article || !article.id) return null;
+            return (
+              <ArticleItem key={article.id} article={article} index={index} />
+            );
+          })
         ) : (
           <div style={{
             padding: "30px", textAlign: "center",

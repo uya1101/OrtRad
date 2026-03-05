@@ -82,7 +82,7 @@ export default function ArticlePage() {
 
   // Memoized computed values
   const authorsText = useMemo(() => {
-    if (!article?.authors || article.authors.length === 0) return 'Unknown';
+    if (!article || !article.authors || article.authors.length === 0) return 'Unknown';
     const mainAuthors = article.authors.slice(0, 3).join(', ');
     const suffix = article.authors.length > 3 ? ` ${t('article.et_al')}` : '';
     return mainAuthors + suffix;
@@ -93,11 +93,18 @@ export default function ArticlePage() {
   }, [article?.published_at, formatDate]);
 
   const title = useMemo(() => {
-    return article ? getArticleField(article, 'title') as string : '';
+    if (!article) return '';
+    try {
+      return getArticleField(article, 'title') as string || article.title || '';
+    } catch {
+      return article.title || '';
+    }
   }, [article, getArticleField]);
 
   const categoryColors = useMemo(() => {
-    return (article?.categories || []).map((cat, i) => {
+    if (!article) return [];
+    const categories = article.categories || [];
+    return categories.map((cat, i) => {
       const colors = [T.neonBlue, T.neonTeal, T.neonPurple, T.neonAmber];
       return CATEGORY_COLORS[cat] || colors[i % colors.length] || T.neonBlue;
     });
@@ -177,7 +184,7 @@ export default function ArticlePage() {
             fontSize: "0.55rem", color: T.textDim,
             letterSpacing: "0.1em", textTransform: "uppercase",
           }}>
-            {SOURCE_LABELS[article.source] || article.source.toUpperCase()}
+            {SOURCE_LABELS[article.source] || (article.source?.toUpperCase() || 'UNKNOWN')}
           </span>
         </div>
         <span style={{
@@ -478,7 +485,9 @@ export default function ArticlePage() {
             <div style={{
               display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "16px",
             }}>
-              {relatedArticles.map((rel) => (
+              {relatedArticles.map((rel) => {
+                if (!rel || !rel.id) return null;
+                return (
                 <Link
                   key={rel.id}
                   to={`/article/${rel.id}`}
@@ -506,7 +515,7 @@ export default function ArticlePage() {
                       display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical",
                       overflow: "hidden",
                     }}>
-                      {getArticleField(rel, 'title') as string}
+                      {getArticleField(rel, 'title') as string || rel.title || 'Untitled'}
                     </h4>
                     <p style={{
                       fontFamily: "'Noto Sans JP',sans-serif",
@@ -514,11 +523,12 @@ export default function ArticlePage() {
                       display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical",
                       overflow: "hidden", margin: 0,
                     }}>
-                      {getArticleField(rel, 'summary_ja') as string || rel.abstract?.substring(0, 150) || t('article.not_available')}
+                      {(getArticleField(rel, 'summary_ja') as string || rel.abstract?.substring(0, 150) || t('article.not_available'))}
                     </p>
                   </div>
                 </Link>
-              ))}
+                );
+              })}
             </div>
           </div>
         )}

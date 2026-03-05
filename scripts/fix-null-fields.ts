@@ -5,17 +5,38 @@
  * by setting them to empty arrays.
  *
  * Usage:
- * 1. Set SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY in .env
- * 2. Run: deno run --allow-env --allow-net scripts/fix-null-fields.ts
+ * Run: deno run --allow-env --allow-net --allow-read scripts/fix-null-fields.ts
  */
 
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
-const supabaseUrl = Deno.env.get('SUPABASE_URL') || '';
-const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || '';
+// Load .env.local file
+const envPath = '.env.local';
+let supabaseUrl = Deno.env.get('SUPABASE_URL');
+let supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+
+try {
+  const envContent = await Deno.readTextFile(envPath);
+  envContent.split('\n').forEach(line => {
+    const [key, ...valueParts] = line.split('=');
+    const value = valueParts.join('=').trim();
+    if (key && value && !key.startsWith('#')) {
+      // Handle both VITE_SUPABASE_URL and SUPABASE_URL
+      if (key === 'VITE_SUPABASE_URL') {
+        supabaseUrl = value;
+      } else if (key === 'SUPABASE_URL') {
+        supabaseUrl = value;
+      } else if (key === 'SUPABASE_SERVICE_ROLE_KEY') {
+        supabaseKey = value;
+      }
+    }
+  });
+} catch (error) {
+  console.log('ℹ️  .env.local not found, using environment variables');
+}
 
 if (!supabaseUrl || !supabaseKey) {
-  console.error('❌ Error: SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY must be set');
+  console.error('❌ Error: SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY must be set in .env.local');
   Deno.exit(1);
 }
 

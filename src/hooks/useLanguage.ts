@@ -59,6 +59,9 @@ export function useLanguage(): UseLanguageReturn {
     article: Article,
     field: K
   ): Article[K] => {
+    // Safety check: if article is null or undefined, return empty string
+    if (!article) return '' as Article[K];
+
     if (lang === 'en') {
       // English: prefer English fields, fallback to Japanese
       if (field === 'title' && article.title) return article.title as Article[K];
